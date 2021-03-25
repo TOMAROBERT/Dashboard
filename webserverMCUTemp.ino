@@ -1,5 +1,4 @@
 //theiotprojects.com
-#include <Ultrasonic.h>
 #include <ESP8266WiFi.h>
 #include <ESPAsyncTCP.h>
 #include <ESPAsyncWebServer.h>
@@ -8,8 +7,6 @@
 #include <OneWire.h> 
 #include <DallasTemperature.h>
 
-// D1 pentru Trig si D2 pentru Echo
-Ultrasonic ultrasonic (D0, D1);
 
 #define tempPin 4 
 OneWire temp1(tempPin); 
@@ -17,18 +14,18 @@ DallasTemperature SenzorTemp(&temp1);
 float Celsius=0;
 
 // Date de logare wi-fi personal
-const char* ssid = "Tenda_6CFA70";
-const char* password = "jokecold781";
+const char* ssid = "RobertNet";
+const char* password = "12345678";
 
 // Creare server web asincron pe portul 80
 AsyncWebServer server(80);
 
-String getDistance() {
+String getTemperatura() {
   SenzorTemp.requestTemperatures(); 
   float Celsius=SenzorTemp.getTempCByIndex(0);
-  
+
   if (isnan(Celsius)) {
-    Serial.println("Eroare citire date din HC-SR04 !");
+    Serial.println("Eroare citire date din senzor temperatura !");
     return "";
   }
   else {
@@ -62,7 +59,7 @@ void setup () {
     request-> send (SPIFFS, "/index.html");
   });
   server.on ("/distance", HTTP_GET, [] (AsyncWebServerRequest * request) {
-    request-> send_P (200, "text / plain", getDistance(). c_str ());
+    request-> send_P (200, "text / plain", getTemperatura(). c_str ());
   });
 
   // start server
