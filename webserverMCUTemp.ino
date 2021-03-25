@@ -58,7 +58,7 @@ void setup () {
   server.on ("/", HTTP_GET, [] (AsyncWebServerRequest * request) {
     request-> send (SPIFFS, "/index.html");
   });
-  server.on ("/distance", HTTP_GET, [] (AsyncWebServerRequest * request) {
+  server.on ("/temperatura", HTTP_GET, [] (AsyncWebServerRequest * request) {
     request-> send_P (200, "text / plain", getTemperatura(). c_str ());
   });
 
