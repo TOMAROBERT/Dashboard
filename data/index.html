@@ -20,7 +20,7 @@
 </head>
     
 <body>
-    <h2>Senzorul are temperatura apei:</h2><h2><div id="frumos"></div></h2>    
+    <h2>Senzorul v1 are temperatura apei:</h2><h2><div id="frumos"></div></h2>    
 </body>
     
 <script>   
@@ -31,7 +31,7 @@ setInterval(function ( ) {
       document.getElementById("frumos").innerHTML = this.responseText;
     }
   };
-  xhttp.open("GET", "/distance", true);
+  xhttp.open("GET", "/temperatura", true);
   xhttp.send();
 }, 3000 ) ;    
 </script>
