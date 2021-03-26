@@ -18,6 +18,9 @@ int initializareApa = 0 ;
 // D1 pentru Trig si D2 pentru Echo
 Ultrasonic ultrasonic (D0, D1);
 
+// D6 pentru pompa DC
+#define pompa 12
+
 // Date de logare wi-fi personal
 const char* ssid = "Tenda_6CFA70";
 const char* password = "jokecold781";
@@ -29,14 +32,32 @@ String getDistanta() {
   // Citim distanta din senzorul ultrasonic
   float d = ultrasonic.read();
   // isnan = NaN = date nedefinite , opus pentru read
-  if (isnan(d)) {
-    Serial.println("Eroare citire date din HC-SR04 !");
-    return "";
+  if (d<10) {
+    Serial.print("Distanta mai mica de 10cm : ");
+    Serial.println("Pompa Activa!");
+    digitalWrite(pompa, LOW); //Activare pompa 
+    return "Pompa activa!";
   }
   else {
-    Serial.print("Distanta este:");
+    Serial.print("Distanta mai mare de 10cm : ");
     Serial.println(d);
+    digitalWrite(pompa, HIGH); //Dezactivare pompa
     return String(d);
+  }
+}
+
+String activarePompa(){
+  float r = ultrasonic.read();
+  if(r<10){
+    digitalWrite(pompa, HIGH);
+    delay(2000);
+    digitalWrite(pompa, LOW);
+    delay(2000);
+    Serial.println(" pompa ACTIVA");
+    return "ACTIVARE";
+  }else{
+    Serial.println(" pompa INACTIVA");
+    return "INACTIVA";
   }
 }
 
@@ -73,11 +94,13 @@ String getNivel() {
   }
 }
 
-
 void setup () {
   // Initializare cu baud 115200 bps pentru transmisia datelor
   Serial.begin (115200);
   SenzorTemp.begin(); 
+  pinMode(pompa, OUTPUT);
+  digitalWrite(pompa, HIGH);
+
 
   // Initializare SPIFFS (pentru comunicarea cu fisierele externe)
   if (! SPIFFS.begin ()) {
