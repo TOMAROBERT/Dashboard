@@ -20,17 +20,32 @@
 </head>
     
 <body>
-    <h2>Senzorul2 are distanta :</h2><h2><div id="frumos1"></div></h2>    
+    <h2>Senzorul v1 are distanta :</h2><h2><div id="frumos1"></div></h2>    
     <h2>Senzorul are nivelul :</h2><h2><div id="frumos2"></div></h2>    
-    <h2>Senzorul are temperatura apei:</h2><h2><div id="frumos3"></div></h2>    
+    <h2>Senzorul are temperatura apei:</h2><h2><div id="frumos3"></div></h2>
 </body>
-    
-<script>   
+<script src="https://www.gstatic.com/firebasejs/8.3.1/firebase.js"></script>    
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyAZjEKxN9ZnOgDJRItNV36t9xMyl7sceLE",
+  authDomain: "self-hands-washing.firebaseapp.com",
+  databaseURL: "https://self-hands-washing-default-rtdb.firebaseio.com",
+  projectId: "self-hands-washing",
+  storageBucket: "self-hands-washing.appspot.com",
+  messagingSenderId: "961080730162",
+  appId: "1:961080730162:web:f7b45fed98efb1250d922b",
+  measurementId: "G-272TDJEF64"
+};  
+firebase.initializeApp(firebaseConfig);
+     
 setInterval(function ( ) {
   var xhttp1 = new XMLHttpRequest();
   xhttp1.onreadystatechange = function() {
     if (this.readyState == 4 && this.status == 200) {
-      document.getElementById("frumos1").innerHTML = this.responseText;
+        firebase.database().ref("ValoriLicenta").set({
+            ultrasonic:document.getElementById("frumos1").innerHTML = this.response
+        });
+        document.getElementById("frumos1").innerHTML = this.responseText;
     }
   };
   xhttp1.open("GET", "/distanta", true);
@@ -48,6 +63,9 @@ setInterval(function ( ) {
   var xhttp3 = new XMLHttpRequest();
   xhttp3.onreadystatechange = function() {
     if (this.readyState == 4 && this.status == 200) {
+      firebase.database().ref("ValoriLicenta").set({
+        temperatura:document.getElementById("frumos3").innerHTML = this.response
+      });
       document.getElementById("frumos3").innerHTML = this.responseText;
     }
   };

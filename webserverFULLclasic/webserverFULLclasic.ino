@@ -7,6 +7,7 @@
 #include <OneWire.h> 
 #include <DallasTemperature.h>
 #include <Ultrasonic.h>
+#include "FirebaseESP8266.h"
 
 #define tempPin 4 // D2 Node
 OneWire temp1(tempPin); 
@@ -24,6 +25,12 @@ Ultrasonic ultrasonic (D0, D1);
 // Date de logare wi-fi personal
 const char* ssid = "Tenda_6CFA70";
 const char* password = "jokecold781";
+
+
+// Initializare obiect de tip firebase / preluare host si parola din proiect
+FirebaseData firebaseData;
+#define FIREBASE_HOST "self-hands-washing-default-rtdb.firebaseio.com"                     
+#define FIREBASE_AUTH "MuOm0VlROADpu9Rh4Xxi5c4ItycAvn8L8ZRJIsum" 
 
 // Creare server web asincron pe portul 80
 AsyncWebServer server(80);
@@ -43,21 +50,6 @@ String getDistanta() {
     Serial.println(d);
     digitalWrite(pompa, HIGH); //Dezactivare pompa
     return String(d);
-  }
-}
-
-String activarePompa(){
-  float r = ultrasonic.read();
-  if(r<10){
-    digitalWrite(pompa, HIGH);
-    delay(2000);
-    digitalWrite(pompa, LOW);
-    delay(2000);
-    Serial.println(" pompa ACTIVA");
-    return "ACTIVARE";
-  }else{
-    Serial.println(" pompa INACTIVA");
-    return "INACTIVA";
   }
 }
 
@@ -94,6 +86,20 @@ String getNivel() {
   }
 }
 
+// Trimitem valorile citite de la senzori in Firebase
+void sensorUpdateFirebase(){
+  float d = ultrasonic.read();
+  
+  SenzorTemp.requestTemperatures(); 
+  float c=SenzorTemp.getTempCByIndex(0);
+
+  int n = analogRead(apaAnalogInt);
+
+  Firebase.setFloat(firebaseData, "/TestTable/distanta", d);
+  Firebase.setFloat(firebaseData, "/TestTable/temperatura", c);
+  Firebase.setFloat(firebaseData, "/TestTable/nivel", n);
+}
+
 void setup () {
   // Initializare cu baud 115200 bps pentru transmisia datelor
   Serial.begin (115200);
@@ -118,6 +124,10 @@ void setup () {
   // Afisare adresa IP locala , pentru a accesa pagina Web
   Serial.println(WiFi.localIP());
 
+  // Initializare conexiune cu Firebase
+  Firebase.begin(FIREBASE_HOST, FIREBASE_AUTH);
+  Firebase.reconnectWiFi(true);
+
   // Alocare URL pentru pagina web
   server.on ("/", HTTP_GET, [] (AsyncWebServerRequest * request) {
     request-> send (SPIFFS, "/index.html");
@@ -138,4 +148,5 @@ void setup () {
   server.begin ();
 }
 void loop() {
+//  sensorUpdateFirebase();
 }
