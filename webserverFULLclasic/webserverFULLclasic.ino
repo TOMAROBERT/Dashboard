@@ -1,23 +1,24 @@
-//theiotprojects.com
 #include <ESP8266WiFi.h>
 #include <ESPAsyncTCP.h>
 #include <ESPAsyncWebServer.h>
 #include <FS.h>
-#include <Wire.h>
 #include <OneWire.h> 
 #include <DallasTemperature.h>
 #include <Ultrasonic.h>
-#include "FirebaseESP8266.h"
+#include <Wire.h>
 
 #define tempPin 4 // D2 Node
 OneWire temp1(tempPin); 
 DallasTemperature SenzorTemp(&temp1);
+int x = 1;
 
 int initializareApa = 0 ; 
 #define apaAnalogInt 14 // D5 Node
 
+
 // D1 pentru Trig si D2 pentru Echo
 Ultrasonic ultrasonic (D0, D1);
+
 
 // D6 pentru pompa DC
 #define pompa 12
@@ -26,78 +27,74 @@ Ultrasonic ultrasonic (D0, D1);
 const char* ssid = "Tenda_6CFA70";
 const char* password = "jokecold781";
 
-
-// Initializare obiect de tip firebase / preluare host si parola din proiect
-FirebaseData firebaseData;
-#define FIREBASE_HOST "self-hands-washing-default-rtdb.firebaseio.com"                     
-#define FIREBASE_AUTH "MuOm0VlROADpu9Rh4Xxi5c4ItycAvn8L8ZRJIsum" 
-
 // Creare server web asincron pe portul 80
 AsyncWebServer server(80);
 
 String getDistanta() {
-  // Citim distanta din senzorul ultrasonic
-  float d = ultrasonic.read();
-  // isnan = NaN = date nedefinite , opus pentru read
-  if (d<10) {
-    Serial.print("Distanta mai mica de 10cm : ");
-    Serial.println("Pompa Activa!");
-    digitalWrite(pompa, LOW); //Activare pompa 
-    return "Pompa activa!";
-  }
-  else {
-    Serial.print("Distanta mai mare de 10cm : ");
-    Serial.println(d);
-    digitalWrite(pompa, HIGH); //Dezactivare pompa
-    return String(d);
+  if(x==1){
+    // Citim distanta din senzorul ultrasonic
+    float d = ultrasonic.read();
+    // isnan = NaN = date nedefinite , opus pentru read
+   
+    if (d<10) {
+      Serial.print("Distanta mai mica de 10cm : ");
+      Serial.println("Pompa Activa!");
+      digitalWrite(pompa, LOW); //Activare pompa 
+      return String(d);
+    }
+    else {
+      Serial.print("Distanta mai mare de 10cm : ");
+      Serial.println(d);
+      digitalWrite(pompa, HIGH); //Dezactivare pompa
+      return String(d);
+    }
+  }else if(x==0){
+      Serial.println("Senzorul ultrasonic este OPRIT");
+      return "0";
   }
 }
 
 String getTemperatura() {
-  SenzorTemp.setWaitForConversion(false);
-  SenzorTemp.setResolution(12);
-  SenzorTemp.requestTemperatures(); 
-  delay(1000);
-  float Celsius=SenzorTemp.getTempCByIndex(0);
-
-  if (isnan(Celsius)) {
-    Serial.println("Eroare citire date din senzor temperatura !");
-    return "";
-  }
-  else {
-    Serial.print("Temperatura este:");
-    Serial.println(Celsius);
-    Serial.println("*********");
-    return String(Celsius);
+  if(x==1){
+    SenzorTemp.setWaitForConversion(false);
+    SenzorTemp.setResolution(12);
+    SenzorTemp.requestTemperatures(); 
+    delay(1000);
+    float Celsius=SenzorTemp.getTempCByIndex(0);
+  
+    if (isnan(Celsius)) {
+      Serial.println("Eroare citire date din senzor temperatura !");
+      return "";
+    }
+    else {
+      Serial.print("Temperatura este:");
+      Serial.println(Celsius);
+      Serial.println("*********");
+      return String(Celsius);
+    }
+  }else if(x==0){
+     Serial.println("Senzorul de temperatura este OPRIT");
+     return "0";
   }
 }
 
 String getNivel() {
+  if(x==1){
     initializareApa = analogRead(apaAnalogInt);
-    if (initializareApa <= 100 ){
-    Serial.println("Senzorul are nivelul apei : Gol ");  
-    return "GOL" ;
-    delay(1000);
+      if (initializareApa <= 100 ){
+      Serial.println("Senzorul are nivelul apei : Gol ");  
+      return "54" ;
+      delay(1000);
+    }
+    else if (initializareApa>330){
+      Serial.println("Senzorul are nivelul apei : Ridicat ");
+      return "90";
+      delay(1000);
+    }
+  }else if(x==0){
+    Serial.println("Senzorul de nivel este OPRIT");
+    return "0";
   }
-  else if (initializareApa>330){
-    Serial.println("Senzorul are nivelul apei : Ridicat ");
-    return "RIDICAT";
-    delay(1000);
-  }
-}
-
-// Trimitem valorile citite de la senzori in Firebase
-void sensorUpdateFirebase(){
-  float d = ultrasonic.read();
-  
-  SenzorTemp.requestTemperatures(); 
-  float c=SenzorTemp.getTempCByIndex(0);
-
-  int n = analogRead(apaAnalogInt);
-
-  Firebase.setFloat(firebaseData, "/TestTable/distanta", d);
-  Firebase.setFloat(firebaseData, "/TestTable/temperatura", c);
-  Firebase.setFloat(firebaseData, "/TestTable/nivel", n);
 }
 
 void setup () {
@@ -124,13 +121,22 @@ void setup () {
   // Afisare adresa IP locala , pentru a accesa pagina Web
   Serial.println(WiFi.localIP());
 
-  // Initializare conexiune cu Firebase
-  Firebase.begin(FIREBASE_HOST, FIREBASE_AUTH);
-  Firebase.reconnectWiFi(true);
-
   // Alocare URL pentru pagina web
   server.on ("/", HTTP_GET, [] (AsyncWebServerRequest * request) {
     request-> send (SPIFFS, "/index.html");
+  });
+  server.on("/styles.css", HTTP_GET, [](AsyncWebServerRequest *request){
+    request->send(SPIFFS, "/styles.css", "text/css");
+  });
+
+  // ON / OFF pentru senzori , folosind butoanele 
+  server.on("/on", HTTP_GET, [](AsyncWebServerRequest *request){
+    x = 1;
+    request->send(SPIFFS, "/index.html", String(), false);
+  });
+  server.on("/off", HTTP_GET, [](AsyncWebServerRequest *request){
+    x = 0;
+    request->send(SPIFFS, "/index.html", String(), false);
   });
 
   //Preluarea valorilor din functile get de mai sus
@@ -148,5 +154,4 @@ void setup () {
   server.begin ();
 }
 void loop() {
-//  sensorUpdateFirebase();
 }
