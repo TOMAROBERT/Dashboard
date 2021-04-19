@@ -162,6 +162,7 @@ const firebaseConfig = {
   measurementId: "G-272TDJEF64"
 };  
 firebase.initializeApp(firebaseConfig);
+var db = firebase.firestore();
     
 // GET in modul clasic
 //setInterval(function ( ) {
@@ -216,10 +217,8 @@ Highcharts.chart('containerUltra', {
                 if (this.readyState == 4 && this.status == 200) {
                   var x = (new Date()).getTime(),
                       y = parseFloat(this.responseText);
-                  firebase.database().ref("ValoriLicenta").set({
-                      ultrasonic : y
-                  });
-                  console.log(this.responseText);
+
+//                  console.log(this.responseText);
                   var newVal2 = parseInt(this.response);
                   document.getElementById("listaDistanta").innerHTML = newVal2;
                   series.addPoint([x, y], true, true);
@@ -309,10 +308,8 @@ Highcharts.chart('containerTemp', {
                 if (this.readyState == 4 && this.status == 200) {
                   var x = (new Date()).getTime(),
                       y = parseFloat(this.responseText);
-                  firebase.database().ref("ValoriLicenta").set({
-                      temperatura : y
-                  });
-                  console.log(this.responseText);
+
+//                  console.log(this.responseText);
                   var newVal2 = parseInt(this.response);
                   document.getElementById("listaTemperatura").innerHTML = newVal2;
                   series.addPoint([x, y], true, true);
@@ -501,17 +498,11 @@ setInterval(function () {
                   if (chartSpeed) {
                     point = chartSpeed.series[0].points[0];
                     newVal = parseFloat(this.responseText);
-                    console.log(this.responseText);
+//                    console.log(this.responseText);
                     point.update(newVal);
                       
-                    firebase.database().ref("ValoriLicenta").set({
-                      nivel : newVal
-                    });
-                    
                     var newVal2 = parseInt(this.response);
                     document.getElementById("listaNivel").innerHTML = newVal2;
-
-                
                   }
                     
                 } 
@@ -519,5 +510,44 @@ setInterval(function () {
               xhttp.open("GET", "/nivel", true);
               xhttp.send();
 }, 2000);  
+setInterval(function () {
+    var oraData = new Date();
+    var ziua = String(oraData.getDate()).padStart(2, '0');
+    var luna = String(oraData.getMonth() + 1).padStart(2, '0'); //January is 0!
+    var anul = oraData.getFullYear();
+    var secunde = oraData.getSeconds();
+    var minute = oraData.getMinutes();
+    var ora = oraData.getHours();
+
+    oraData = luna + '/' + ziua + '/' + anul + ' ** ' + ora + ':' + minute + ':' + secunde;
+
+    var ultra = document.getElementById('listaDistanta').innerHTML;
+    var nivel = document.getElementById('listaNivel').innerHTML;
+    var temp  = document.getElementById('listaTemperatura').innerHTML;
+//    console.log("distanta : " + ultra);
+//    console.log("nivel : " + nivel);
+//    console.log("temperatura : " + temp);
+//    console.log("Ora si data sunt: " + oraData); 
+    db.collection("ValoriLicentaStocate").doc().set({
+        ultrasonic:ultra,
+        nivel:nivel,
+        temperatura:temp,
+        data:oraData
+    })
+    .then(function(){
+        console.log("Succes scris!");
+    })
+    .catch(function(){
+        console.log("eroare"+eroare); 
+    })
+    
+    firebase.database().ref("ValoriLicentaTimpReal").set({
+        ultrasonic:ultra,
+        nivel:nivel,
+        temperatura:temp,
+        data:oraData
+    });
+}, 2000); 
+    
 </script>
 </html>
