@@ -11,6 +11,6 @@ The share of the web pages to network is made using the ngrok app, which by the 
 <img src="https://user-images.githubusercontent.com/61541953/125313628-14b7cf00-e33e-11eb-89c0-2c277ebedb6d.png">
 
 
-<h2><b>Keywords</b></h2>:ESP8266, SPIFFS, Arduino IDE, AJAX, JavaScript, XML, CSS Media Query, HighCharts JS, Firestore db
+<h2><b>Keywords</b></h2>:ESP8266, SPIFFS, Arduino IDE, AJAX, JavaScript, XML, CSS Media Query, HighCharts JS, Firestore db, ngrok HTTP tunneling
 
 
